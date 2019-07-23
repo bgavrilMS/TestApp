@@ -1,7 +1,9 @@
 using Microsoft.Identity.Client;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections;
 using System.Security;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace UnitTestProject1
@@ -16,6 +18,17 @@ namespace UnitTestProject1
         public async Task TestAsync()
         {
             string secret = Environment.GetEnvironmentVariable("kvsecret");
+            if (string.IsNullOrEmpty(secret))
+            {
+                System.Collections.IDictionary allEnvs = Environment.GetEnvironmentVariables();
+                StringBuilder sb = new StringBuilder();
+                foreach (DictionaryEntry kvp in allEnvs)
+                {
+                    sb.Append($"{kvp.Key}  = {kvp.Value}; ");
+                }
+                throw new InvalidOperationException("Env variable kvsecret not found. " + 
+                    sb.ToString());
+            }
 
             KeyVaultSecretFetcher fetcher = new KeyVaultSecretFetcher(secret);
             var userPassword = await fetcher.FetchUserAsync().ConfigureAwait(false);
