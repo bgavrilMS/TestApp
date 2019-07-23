@@ -17,11 +17,12 @@ namespace UnitTestProject1
         private const string KeyVaultClientId = "4bf2b2cf-1fec-4ee9-8d95-e862d8d425a6";
         private IConfidentialClientApplication _cca;
         private readonly KeyVaultClient _keyVaultClient;
+        private readonly string _secret;
 
-
-        public KeyVaultSecretFetcher()
+        public KeyVaultSecretFetcher(string secret)
         {
             _keyVaultClient = new KeyVaultClient(KeyVaultAuthenticationCallback);
+            _secret = secret;
         }
 
         public async Task<UserAndPassword> FetchUserAsync()
@@ -34,11 +35,9 @@ namespace UnitTestProject1
 
         private async Task<string> KeyVaultAuthenticationCallback(string authority, string resource, string scope)
         {
-            string secret = Environment.GetEnvironmentVariable("kvsecret"); // get it from VSTS 
-
-            if (String.IsNullOrEmpty(secret))
+            if (String.IsNullOrEmpty(_secret))
             {
-                throw new InvalidOperationException("Test Setup Error: could not find an env variable named kvsecret")
+                throw new InvalidOperationException("Test Setup Error: Could not find a setting named kvsecret");
             }
 
             if (_cca == null)
@@ -46,7 +45,7 @@ namespace UnitTestProject1
                 _cca = ConfidentialClientApplicationBuilder
                         .Create(KeyVaultClientId)
                         .WithAuthority(new Uri(authority), true)
-                        .WithClientSecret(secret)
+                        .WithClientSecret(_secret)
                         .Build();
             }
 

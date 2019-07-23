@@ -8,12 +8,15 @@ namespace UnitTestProject1
     [TestClass]
     public class UnitTest1
     {
-        string B2CAppId = "a7bb8dac-fdda-42f0-b277-b9c4e5ca0dac";
+        public TestContext TestContext { get; set; }
+        private const string B2CAppId = "a7bb8dac-fdda-42f0-b277-b9c4e5ca0dac";
 
         [TestMethod]
         public async Task TestAsync()
         {
-            KeyVaultSecretFetcher fetcher = new KeyVaultSecretFetcher();
+            string kvSecret = TestContext.Properties["kvSecret"].ToString();
+
+            KeyVaultSecretFetcher fetcher = new KeyVaultSecretFetcher(kvSecret);
             var userPassword = await fetcher.FetchUserAsync().ConfigureAwait(false);
 
             IPublicClientApplication publicClient = PublicClientApplicationBuilder
