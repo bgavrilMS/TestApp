@@ -36,6 +36,11 @@ namespace UnitTestProject1
         {
             string secret = Environment.GetEnvironmentVariable("kvsecret"); // get it from VSTS 
 
+            if (String.IsNullOrEmpty(secret))
+            {
+                throw new InvalidOperationException("Test Setup Error: could not find an env variable named kvsecret")
+            }
+
             if (_cca == null)
             {
                 _cca = ConfidentialClientApplicationBuilder
