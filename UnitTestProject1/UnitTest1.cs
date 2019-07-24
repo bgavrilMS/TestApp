@@ -18,6 +18,7 @@ namespace UnitTestProject1
         public async Task TestAsync()
         {
             string secret = Environment.GetEnvironmentVariable("kvsecret");
+            TestContext.WriteLine($"!{secret}!");
             VerifySecret(secret);
 
             KeyVaultSecretFetcher fetcher = new KeyVaultSecretFetcher(secret);
@@ -33,6 +34,7 @@ namespace UnitTestProject1
             {
                 secureString.AppendChar(c);
             }
+
 
             var result = await publicClient.AcquireTokenByUsernamePassword(
                 new[] { "https://bgavrilb2c.onmicrosoft.com/hello3/user_impersonation" },
