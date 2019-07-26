@@ -25,7 +25,7 @@ namespace UnitTestProject1
             string secret = Environment.GetEnvironmentVariable(KeyVaultSecret);
 
             // TODO: if the test is not run from the CI, use   
-            // PublicClientApplication.AcquireTokenInteractive to fetch the secrets!
+            // PublicClientApplication.AcquireTokenInteractive to fetch the secrets s(i.e. have the developer login)
 
             VerifySecretExists(secret);
 
