@@ -12,50 +12,60 @@ namespace UnitTestProject1
     public class UnitTest1
     {
         public TestContext TestContext { get; set; }
+
+        private const string AuthorityUri = "https://bgavrilb2c.b2clogin.com/tfp/bgavrilb2c.onmicrosoft.com/b2c_1_ropc";
+        private const string Scope = "https://bgavrilb2c.onmicrosoft.com/hello3/user_impersonation";
+        private const string KeyVaultSecret = "kvsecret";
         string B2CAppId = "a7bb8dac-fdda-42f0-b277-b9c4e5ca0dac";
 
         [TestMethod]
         public async Task TestAsync()
         {
-            string secret = Environment.GetEnvironmentVariable("kvsecret");
-            TestContext.WriteLine($"!{secret}!");
-            VerifySecret(secret);
+            // The CI should inject his secret as an env variable
+            string secret = Environment.GetEnvironmentVariable(KeyVaultSecret);
+
+            // TODO: if the test is not run from the CI, use   
+            // PublicClientApplication.AcquireTokenInteractive to fetch the secrets!
+
+            VerifySecretExists(secret);
 
             KeyVaultSecretFetcher fetcher = new KeyVaultSecretFetcher(secret);
             var userPassword = await fetcher.FetchUserAsync().ConfigureAwait(false);
 
             IPublicClientApplication publicClient = PublicClientApplicationBuilder
                 .Create(B2CAppId)
-                .WithB2CAuthority("https://bgavrilb2c.b2clogin.com/tfp/bgavrilb2c.onmicrosoft.com/b2c_1_ropc")
+                .WithB2CAuthority(AuthorityUri)
                 .Build();
 
+            // MSAL wants a secure string
             SecureString secureString = new SecureString();
             foreach (char c in userPassword.Password)
             {
                 secureString.AppendChar(c);
             }
 
-
             var result = await publicClient.AcquireTokenByUsernamePassword(
-                new[] { "https://bgavrilb2c.onmicrosoft.com/hello3/user_impersonation" },
+                new[] { Scope },
                 userPassword.User,
                 secureString).ExecuteAsync();
 
             Assert.IsNotNull(result);
         }
 
-        private static void VerifySecret(string secret)
+        private static void VerifySecretExists(string secret)
         {
             if (string.IsNullOrEmpty(secret))
             {
-                System.Collections.IDictionary allEnvs = Environment.GetEnvironmentVariables();
+                IDictionary allEnvs = Environment.GetEnvironmentVariables();
                 StringBuilder sb = new StringBuilder();
                 foreach (DictionaryEntry kvp in allEnvs)
                 {
                     sb.Append($"{kvp.Key}  = {kvp.Value}; ");
                 }
-                throw new InvalidOperationException("Env variable kvsecret not found. " +
-                    sb.ToString());
+
+                throw new InvalidOperationException($"Could not find an env variable that holds the " +
+                    $"Confidential Client secret needed to access keyvault. Looking for a variable named {KeyVaultSecret} " +
+                    $"Existing variables are: {sb.ToString()}");
             }
         }
     }
